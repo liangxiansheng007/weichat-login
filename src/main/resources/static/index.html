@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/lib/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+<div style="width:100%;">
+    <div id="div1" style="margin:0px auto;">
+        <h2>个人授权中心登录</h2>
+        <div id="qrDiv" style="display: none">
+        <img src="#" id="qr" >
+        <p>关注公众号才能登录，二维码有效时间5分钟</p>
+        </div>
+        <button id="login" >登录</button>
+    </div>
+    <div id="div2">
+
+    </div>
+
+</div>
+
+
+<script>
+$(function(){
+    $("#login").click(function(){
+        //var url = "https://open.weixin.qq.com/connect/qrconnect?appid=wxafb782b24cefc5f8&redirect_uri="+encodeURI("http://cnhealth.free.vipnps.vip/")+"&response_type=code&scope=snsapi_login&state=123#wechat_redirect";
+        //window.location.href=url;
+        getQr();
+    });
+});
+
+
+
+function getQr(){
+    $.ajax({
+        url:"/login/getQr",
+        contentType:"application/x-www-form-urlencoded",
+        success:function(data){
+            console.log("data------"+data);
+            //data = eval(data);
+            data = JSON.parse(data);
+            if(data!=null&&data.code=="1"){
+                $("#login").hide();
+                $("#qr").attr("src",data.url);
+                $("#qrDiv").show();
+                getOpenid(data.keyId);
+            }else{
+                if(data==null){
+                    alert("请求异常：data is null");
+                }else{
+                    alert("请求异常："+data.message);
+                }
+            }
+        }
+    });
+}
+
+function getOpenid(keyId){
+    var countTime =0;
+   var intervalId = setInterval(function (){
+
+       if(countTime>3000000){
+           clearInterval(intervalId);
+       }
+
+
+        $.ajax({
+            url:"/accept/getopenid/"+keyId,
+            success:function(data){
+                countTime+=2000;
+                console.log("openid------"+data);
+                //data = eval(data);
+                if(data!=null&&data!='null'&&data!=''){
+                    $("#div1").hide();
+                    $("#div2").text("恭喜登录成功，"+data);
+                    $("#div2").show();
+                    clearInterval(intervalId);
+                }
+            }
+        });
+    },2000);
+
+}
+
+
+</script>
+
+</body>
+</html>
